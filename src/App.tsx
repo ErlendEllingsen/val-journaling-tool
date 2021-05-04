@@ -31,6 +31,8 @@ const journalOpts: JournalItem[] = [
   newJournalItem('prepaid_insurance', 'the firm paid for a one-year insurance policy (cash)', 'Prepaid Insurance', 'Cash'),
   newJournalItem('bought_inventory_on_account', 'the firm purchased inventory on account', 'Inventory', 'Accounts payable '),
   newJournalItem('received_payment_prev_sales', 'received payment from clients from previous sales', 'Cash', 'Accounts Receivable'),
+  newJournalItem('paid_inventories_purchased_account', 'paid for inventories purchased on account', 'Accounts Payable ', 'Cash'),
+  newJournalItem('paid_salaries', ' the firm paid for the salaries of the first semester of the year.', 'Salaries and Wages Expense ', 'Cash'),
 ];
 
 interface AddedItem {
