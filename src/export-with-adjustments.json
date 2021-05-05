@@ -1,0 +1,179 @@
+{
+  "addedItems": [
+    {
+      "item": {
+        "id": "shareholders_invested",
+        "sourceText": "shareholders invested",
+        "debitPost": "Cash",
+        "creditPost": "Shareholder cap"
+      },
+      "sum": 1000000,
+      "date": "02.01"
+    },
+    {
+      "item": {
+        "id": "got_loan",
+        "sourceText": "got a loan",
+        "debitPost": "Cash",
+        "creditPost": "Bank Loan"
+      },
+      "sum": 500000,
+      "date": "02.01"
+    },
+    {
+      "item": {
+        "id": "prepaid_rent_cash",
+        "sourceText": "the firm rented offices for the whole of a year (paid cash)",
+        "debitPost": "Prepaid rent",
+        "creditPost": "Cash"
+      },
+      "sum": 300000,
+      "date": "02.01"
+    },
+    {
+      "item": {
+        "id": "bought_ppe_cash",
+        "sourceText": "the firm bought equipment (paid cash)",
+        "debitPost": "Property, Plant & Equipment",
+        "creditPost": "Cash"
+      },
+      "sum": 500000,
+      "date": "31.01"
+    },
+    {
+      "item": {
+        "id": "bought_inventory_credit",
+        "sourceText": "the firm bought inventory (credit)",
+        "debitPost": "Inventory",
+        "creditPost": "Accounts payable"
+      },
+      "sum": 300000,
+      "date": "01.02"
+    },
+    {
+      "item": {
+        "id": "goods_sold_account",
+        "sourceText": "the firm sold goods on account",
+        "debitPost": "Accounts Receivable",
+        "creditPost": "Sales Revenue"
+      },
+      "sum": 100000,
+      "date": "15.02"
+    },
+    {
+      "item": {
+        "id": "prepaid_insurance",
+        "sourceText": "the firm paid for a one-year insurance policy (cash)",
+        "debitPost": "Prepaid Insurance",
+        "creditPost": "Cash"
+      },
+      "sum": 24000,
+      "date": "01.03"
+    },
+    {
+      "item": {
+        "id": "bought_inventory_credit",
+        "sourceText": "the firm purchased inventory on account",
+        "debitPost": "Inventory",
+        "creditPost": "Accounts payable "
+      },
+      "sum": 200000,
+      "date": "17.03"
+    },
+    {
+      "item": {
+        "id": "received_payment_prev_sales",
+        "sourceText": "received payment from clients from previous sales",
+        "debitPost": "Cash",
+        "creditPost": "Accounts Receivable"
+      },
+      "sum": 50000,
+      "date": "31.03"
+    },
+    {
+      "item": {
+        "id": "goods_sold_account",
+        "sourceText": "the firm sold goods on account",
+        "debitPost": "Accounts Receivable",
+        "creditPost": "Sales Revenue"
+      },
+      "sum": 500000,
+      "date": "15.04"
+    },
+    {
+      "item": {
+        "id": "received_payment_prev_sales",
+        "sourceText": "received payment from clients from previous sales",
+        "debitPost": "Cash",
+        "creditPost": "Accounts Receivable"
+      },
+      "sum": 150000,
+      "date": "10.05"
+    },
+    {
+      "item": {
+        "id": "paid_inventories_purchased_account",
+        "sourceText": "paid for inventories purchased on account",
+        "debitPost": "Accounts Payable ",
+        "creditPost": "Cash"
+      },
+      "sum": 300000,
+      "date": "01.06"
+    },
+    {
+      "item": {
+        "id": "paid_salaries",
+        "sourceText": " the firm paid for the salaries of the first semester of the year.",
+        "debitPost": "Salaries and Wages Expense ",
+        "creditPost": "Cash"
+      },
+      "sum": 200000,
+      "date": "30.06"
+    }
+  ],
+  "adjustments": [
+    {
+      "date": "30.06",
+      "post": "depreciationExpense",
+      "useValueFromBalance": true,
+      "customValue": 0,
+      "valueFromBalanceDurationPeriod": 12,
+      "valueFromBalanceUsagePeriod": 5
+    },
+    {
+      "date": "30.06",
+      "post": "insuranceExpense",
+      "useValueFromBalance": true,
+      "customValue": 0,
+      "valueFromBalanceDurationPeriod": 12,
+      "valueFromBalanceUsagePeriod": 4
+    },
+    {
+      "date": "30.06",
+      "post": "interestExpense",
+      "useValueFromBalance": true,
+      "customValue": 0,
+      "valueFromBalanceDurationPeriod": 12,
+      "valueFromBalanceUsagePeriod": 6
+    },
+    {
+      "date": "30.06",
+      "post": "inventory",
+      "useValueFromBalance": false,
+      "customValue": 200000,
+      "valueFromBalanceDurationPeriod": 0,
+      "valueFromBalanceUsagePeriod": 0
+    },
+    {
+      "date": "",
+      "post": "rentExpense",
+      "useValueFromBalance": true,
+      "customValue": 0,
+      "valueFromBalanceDurationPeriod": 2,
+      "valueFromBalanceUsagePeriod": 1
+    }
+  ],
+  "incomeStatementAsOf": "30.06",
+  "depreciationSum": 45000,
+  "interestPaidSum": 25000
+}
