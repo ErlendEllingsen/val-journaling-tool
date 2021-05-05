@@ -43,7 +43,7 @@ const journalOpts: JournalItem[] = [
   newJournalItem('prepaid_insurance', 'paid for a one-year insurance policy (cash)', 'Prepaid Insurance', 'Cash'),
 
   newJournalItem('received_payment_prev_sales', 'received payment from clients from previous sales', 'Cash', 'Accounts Receivable'),
-  newJournalItem('paid_inventories_purchased_account', 'paid for inventories purchased on account', 'Accounts Payable ', 'Cash'),
+  newJournalItem('paid_inventories_purchased_account', 'paid for inventories purchased on account', 'Accounts payable', 'Cash'),
   newJournalItem('paid_salaries', '  paid for the salaries of the first semester of the year.', 'Salaries and Wages Expense ', 'Cash'),
 ];
 
@@ -85,10 +85,10 @@ function App() {
 
     const importedObject = JSON.parse(e as string);
 
-    const {addedItems, adjustments, incomeStatementAsOf,
+    const { addedItems, adjustments, incomeStatementAsOf,
       depreciationSum,
-      interestPaidSum} = importedObject;
-    
+      interestPaidSum } = importedObject;
+
     setAddedItems(addedItems);
     setAdjustments(adjustments);
     setIncomeStatementAsOf(incomeStatementAsOf);
@@ -171,51 +171,51 @@ function App() {
 
 
   for (let item of addedItems) {
-      const sourceText = item.item.id;
-      const sum = item.sum;
-      // prepaid_rent_cash
-      switch (sourceText) {
-        case 'goods_sold_account': 
+    const sourceText = item.item.id;
+    const sum = item.sum;
+    // prepaid_rent_cash
+    switch (sourceText) {
+      case 'goods_sold_account':
         // case 'received_payment_prev_sales':
-          balance.salesRevenue += sum;
-          break;
-        case 'bought_inventory_cash':
-        case 'bought_inventory_credit':
-          balance.costOfGoodsSold += sum;
-          break;
-        case 'prepaid_rent_cash':
-          balance.rentExpense += sum;
-          break;
-        case 'bought_inventory_credit':
-          break;
-        case 'paid_salaries':
-          balance.salariesAndWageExpense += sum;
-          break;
-        case 'prepaid_insurance':
-          balance.insuranceExpense += sum;
-          break;
-      }
+        balance.salesRevenue += sum;
+        break;
+      case 'bought_inventory_cash':
+      case 'bought_inventory_credit':
+        balance.costOfGoodsSold += sum;
+        break;
+      case 'prepaid_rent_cash':
+        balance.rentExpense += sum;
+        break;
+      case 'bought_inventory_credit':
+        break;
+      case 'paid_salaries':
+        balance.salariesAndWageExpense += sum;
+        break;
+      case 'prepaid_insurance':
+        balance.insuranceExpense += sum;
+        break;
     }
+  }
 
-    balance.depreciationExpense = depreciationSum;
-    balance.interestExpense = interestPaidSum;
-    
-    const preAdjustmentBalance = JSON.parse(JSON.stringify(balance));
+  balance.depreciationExpense = depreciationSum;
+  balance.interestExpense = interestPaidSum;
 
-    // Calculate in adjustments
-    const appliedAdjustments = [];
-    for (let adj of adjustments) {
-      
-      if (adj.post === 'inventory') {
-        
-        const prevValue = (balance as any)['costOfGoodsSold'] as number;
-        const changeInCostOfGoods = prevValue - adj.customValue;
-        
-        (balance as any)['costOfGoodsSold'] = changeInCostOfGoods;
-        appliedAdjustments.push({date: adj.date, post: 'costOfGoodsSold', adjustmentValue: changeInCostOfGoods});
+  const preAdjustmentBalance = JSON.parse(JSON.stringify(balance));
 
-      } else {
-        let newPostValue = 0;
+  // Calculate in adjustments
+  const appliedAdjustments = [];
+  for (let adj of adjustments) {
+
+    if (adj.post === 'inventory') {
+
+      const prevValue = (balance as any)['costOfGoodsSold'] as number;
+      const changeInCostOfGoods = prevValue - adj.customValue;
+
+      (balance as any)['costOfGoodsSold'] = changeInCostOfGoods;
+      appliedAdjustments.push({ date: adj.date, post: 'costOfGoodsSold', adjustmentValue: changeInCostOfGoods });
+
+    } else {
+      let newPostValue = 0;
       if (adj.useValueFromBalance) {
         const prevValue = (balance as any)[adj.post] as number;
         newPostValue = (prevValue / adj.valueFromBalanceDurationPeriod) * adj.valueFromBalanceUsagePeriod;
@@ -223,28 +223,104 @@ function App() {
         newPostValue = adj.customValue;
       }
       (balance as any)[adj.post] = newPostValue;
-      appliedAdjustments.push({date: adj.date, post: adj.post, adjustmentValue: newPostValue});
-      }
-      
-
+      appliedAdjustments.push({ date: adj.date, post: adj.post, adjustmentValue: newPostValue });
     }
 
-    // Calculate balance sum numbers
-    // Balance
-    balance.grossProfit = balance.salesRevenue-balance.costOfGoodsSold;
-    balance.incomeFromOperations = 
-    balance.grossProfit - balance.salariesAndWageExpense - balance.rentExpense - balance.depreciationExpense - balance.insuranceExpense;
-    
-    balance.netIncome = balance.incomeFromOperations - balance.interestExpense;
 
-    // pre Adjustment Balance
-    preAdjustmentBalance.grossProfit = preAdjustmentBalance.salesRevenue-preAdjustmentBalance.costOfGoodsSold;
-    preAdjustmentBalance.incomeFromOperations = 
+  }
+
+  // Calculate balance sum numbers
+  // Balance
+  balance.grossProfit = balance.salesRevenue - balance.costOfGoodsSold;
+  balance.incomeFromOperations =
+    balance.grossProfit - balance.salariesAndWageExpense - balance.rentExpense - balance.depreciationExpense - balance.insuranceExpense;
+
+  balance.netIncome = balance.incomeFromOperations - balance.interestExpense;
+
+  // pre Adjustment Balance
+  preAdjustmentBalance.grossProfit = preAdjustmentBalance.salesRevenue - preAdjustmentBalance.costOfGoodsSold;
+  preAdjustmentBalance.incomeFromOperations =
     preAdjustmentBalance.grossProfit - preAdjustmentBalance.salariesAndWageExpense - preAdjustmentBalance.rentExpense - preAdjustmentBalance.depreciationExpense - preAdjustmentBalance.insuranceExpense;
 
-    preAdjustmentBalance.netIncome = preAdjustmentBalance.incomeFromOperations - preAdjustmentBalance.interestExpense;
+  preAdjustmentBalance.netIncome = preAdjustmentBalance.incomeFromOperations - preAdjustmentBalance.interestExpense;
 
 
+  // Calculate financial position
+  let financialPositionObj = {
+    // lhs
+    ppe: 0,
+    accDepr: preAdjustmentBalance.depreciationExpense,
+    netPPE: 0,
+    prepaidInsurance: 0,
+    inventory: preAdjustmentBalance.costOfGoodsSold,
+    prepaidRent: preAdjustmentBalance.rentExpense,
+    accountsReceivable: 0,
+    cash: 0,
+    totalCurrentAssets: 0,
+    totalAssets: 0,
+
+    // rhs
+    shareCap: 0,
+    retainedEarnings: balance.netIncome,
+    totalEquity: 0,
+    bankLoan: 0,
+    accountsPayable: 0,
+    interestPayable: preAdjustmentBalance.interestExpense,
+    totalCurrentLiabilities: 0,
+    totalEquityAndLiabilities: 0,
+  }
+
+  const processLineItem = (postName: string, finPosName: string, item: AddedItem) => {
+    if (item.item.debitPost.toLowerCase().trim() === postName.toLowerCase().trim()) (financialPositionObj as any)[finPosName] += item.sum;
+    if (item.item.creditPost.toLowerCase().trim() === postName.toLowerCase().trim()) (financialPositionObj as any)[finPosName] -= item.sum;
+  }
+
+  // Add line items
+  for (let item of addedItems) {
+    processLineItem('Property, Plant & Equipment', 'ppe', item);
+    processLineItem('Accounts Receivable', 'accountsReceivable', item);
+    processLineItem('Cash', 'cash', item);
+    processLineItem('Shareholder cap', 'shareCap', item);
+    processLineItem('Bank Loan', 'bankLoan', item);
+
+    processLineItem('Accounts payable', 'accountsPayable', item);
+
+  //     accountsPayable
+  // interestPayable
+  }
+
+  // If adjustment -- clear existing value
+  const adjustmentPostNames = appliedAdjustments.map((el) => { return el.post });
+
+  if (adjustmentPostNames.includes('depreciationExpense')) financialPositionObj.accDepr = 0;
+  if (adjustmentPostNames.includes('insuranceExpense')) financialPositionObj.prepaidInsurance = 0;
+  // if (adjustmentPostNames.includes('interestExpense')) financialPositionObj.interestExpense = 0;
+  // if (adjustmentPostNames.includes('rentExpense')) financialPositionObj.prepaidRent = 0;
+
+  // Insurance
+  financialPositionObj.prepaidInsurance = preAdjustmentBalance.insuranceExpense - balance.insuranceExpense;
+
+  // Add adjustments 
+  for (let applAdj of appliedAdjustments) {
+    const {post, adjustmentValue} = applAdj;
+    if (post === 'depreciationExpense') financialPositionObj.accDepr += adjustmentValue;
+    if (post === 'costOfGoodsSold') financialPositionObj.inventory -= adjustmentValue;
+    if (post === 'rentExpense') financialPositionObj.prepaidRent -= adjustmentValue;
+    if (post === 'interestExpense') financialPositionObj.interestPayable -= adjustmentValue;
+  }
+
+  // Calculate net ops
+  financialPositionObj.netPPE = financialPositionObj.ppe - financialPositionObj.accDepr;
+  financialPositionObj.totalCurrentAssets = financialPositionObj.prepaidInsurance + financialPositionObj.inventory + financialPositionObj.prepaidRent + financialPositionObj.accountsReceivable + financialPositionObj.cash;
+  financialPositionObj.totalAssets = financialPositionObj.netPPE + financialPositionObj.totalCurrentAssets;
+
+  financialPositionObj.totalEquity = (-financialPositionObj.shareCap) + financialPositionObj.retainedEarnings;
+  
+  financialPositionObj.totalCurrentLiabilities = -financialPositionObj.accountsPayable + financialPositionObj.interestPayable;
+  financialPositionObj.totalEquityAndLiabilities = financialPositionObj.totalEquity + (-financialPositionObj.bankLoan) + financialPositionObj.totalCurrentLiabilities;
+
+  // totalCurrentLiabilities
+  // totalEquityAndLiabilities
 
   return (
     <div className="App">
@@ -314,7 +390,7 @@ function App() {
       <hr />
       <h1>Manual inputs</h1>
       <h2>As of (31.X):</h2>
-      <input type="text" placeholder="As of (END MONTH)" value={incomeStatementAsOf} onChange={(e) => { setIncomeStatementAsOf(e.target.value);  }} />
+      <input type="text" placeholder="As of (END MONTH)" value={incomeStatementAsOf} onChange={(e) => { setIncomeStatementAsOf(e.target.value); }} />
       <h3>Depreciation (per year):</h3>
       <input type="number" placeholder="Sum" value={depreciationSum} onChange={(e) => { setDepreciationSum(Number(e.target.value)); }} />
       <h3>Interest paid:</h3>
@@ -325,14 +401,14 @@ function App() {
       <input id="adjustment_date" placeholder="Adjustment date" value={adjustmentDate} onChange={(e) => { setAdjustmentDate(e.target.value) }} />
 
       <label htmlFor="adjustment_post">Post</label>
-      <select id="adjustment_post" value={adjustmentPost} onChange={(e) => { 
+      <select id="adjustment_post" value={adjustmentPost} onChange={(e) => {
         const newPost = e.target.value;
-        setAdjustmentPost(newPost) 
+        setAdjustmentPost(newPost)
 
         if (newPost === 'inventory') {
           setAdjustmentType(1);
         }
-      
+
       }}>
         <option value={''}></option>
         <option value={'depreciationExpense'}>Depreciation</option>
@@ -343,22 +419,22 @@ function App() {
       </select>
 
       {adjustmentPost !== 'inventory' && <><label htmlFor="adjustment_base_value">Base value</label>
-      <select id="adjustment_base_value" value={adjustmentType} onChange={(e) => { setAdjustmentType(Number(e.target.value)); }}>
-        <option value={0}>Use value from balance</option>
-        <option value={1}>Override value</option>
-      </select></>}
-      
+        <select id="adjustment_base_value" value={adjustmentType} onChange={(e) => { setAdjustmentType(Number(e.target.value)); }}>
+          <option value={0}>Use value from balance</option>
+          <option value={1}>Override value</option>
+        </select></>}
+
 
       {adjustmentType === 0 && <><label htmlFor="adjustment_base_value_input">Duration of element</label>
-      <input id="adjustment_base_value_input" placeholder="Duration" value={adjustmentDuration} onChange={(e) => { setAdjustmentDuration(Number(e.target.value)) }}  />
-      <label htmlFor="adjustment_usage_period_input">Usage period</label>
-      <input id="adjustment_usage_period_input" placeholder="Usage period" value={adjustmentUsage} onChange={(e) => { setAdjustmentUsage(Number(e.target.value)) }} /></>}
+        <input id="adjustment_base_value_input" placeholder="Duration" value={adjustmentDuration} onChange={(e) => { setAdjustmentDuration(Number(e.target.value)) }} />
+        <label htmlFor="adjustment_usage_period_input">Usage period</label>
+        <input id="adjustment_usage_period_input" placeholder="Usage period" value={adjustmentUsage} onChange={(e) => { setAdjustmentUsage(Number(e.target.value)) }} /></>}
       {adjustmentType === 1 && <>
         <label htmlFor="adjustment_override_value">
           {adjustmentPost === 'inventory' && <>Newfound Inventory Value</>}
           {adjustmentPost !== 'inventory' && <>Override value</>}
         </label>
-          <input id="adjustment_override_value" placeholder="Override value" value={adjustmentOverrideValue} onChange={(e) => { setAdjustmentOverrideValue(Number(e.target.value)) }} />
+        <input id="adjustment_override_value" placeholder="Override value" value={adjustmentOverrideValue} onChange={(e) => { setAdjustmentOverrideValue(Number(e.target.value)) }} />
       </>}
 
       <button onClick={(e) => { addAdjustment(); }}>Add adjustment</button>
@@ -368,42 +444,12 @@ function App() {
       <h3>Applied adj:</h3>
       {JSON.stringify(appliedAdjustments)}
       <ul>
-      {appliedAdjustments.map((el) => {
-        return <li>{el.post}: {numberWithCommas(el.adjustmentValue)} (before: {numberWithCommas((preAdjustmentBalance as any)[el.post])})</li>
-      })}
+        {appliedAdjustments.map((el) => {
+          return <li>{el.post}: {numberWithCommas(el.adjustmentValue)} (before: {numberWithCommas((preAdjustmentBalance as any)[el.post])})</li>
+        })}
       </ul>
 
-      {/* <table>
-        <thead>
-          <tr>
-            <th>Transaction</th>
-            <th>Date</th>
-            <th style={{ minWidth: 300 }}>Item</th>
-            <th style={{ minWidth: 150 }}>Dr.</th>
-            <th style={{ minWidth: 150 }}>Cr.</th>
-          </tr>
-        </thead>
-        <tbody>
-          {addedItems.map((el, index) => {
-            return <>
-              <tr className='first-row'>
-                <td>{index + 1}</td>
-                <td>{el.date}</td>
-                <td className='line-debit'>{el.item.debitPost}</td>
-                <td>{numberWithCommas(el.sum)}</td>
-                <td></td>
-              </tr>
-              <tr className='second-row'>
-                <td></td>
-                <td></td>
-                <td className='line-credit'>{el.item.creditPost}</td>
-                <td></td>
-                <td>{numberWithCommas(el.sum)}</td>
-              </tr>
-            </>;
-          })}
-        </tbody>
-      </table> */}
+
       <table>
         <thead>
           <tr>
@@ -441,15 +487,15 @@ function App() {
                 break;
               case 'costOfGoodsSold':
                 debitItem = 'Cost of goods sold';
-                creditItem = 'Inventory ';
+                creditItem = 'Inventory';
                 break;
               case 'interestExpense':
                 debitItem = 'Interest Expense';
                 creditItem = 'Interest Payable ';
                 break;
-                
+
             }
-            
+
 
             const originalTx = addedItems.length;
 
@@ -468,7 +514,7 @@ function App() {
                 <td></td>
                 <td>{numberWithCommas(el.adjustmentValue)}</td>
               </tr>
-            </>;
+            </>
           })}
         </tbody>
       </table>
@@ -536,6 +582,110 @@ function App() {
           </tr>
         </tbody>
       </table>
+
+      <hr />
+      <h1>Financial Position as of 31.{incomeStatementAsOf}</h1>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colSpan={2}><u>Assets</u></td>
+          </tr>
+          <tr>
+            <td>Property, Plant and Equipment</td>
+            <td>{numberWithCommas(financialPositionObj.ppe)}</td>
+          </tr>
+          <tr>
+            <td>Accumulate Depraciation </td>
+            <td>-{numberWithCommas(financialPositionObj.accDepr)}</td>
+          </tr>
+          <tr>
+            <td>Net PP&E </td>
+            <td><strong>{numberWithCommas(financialPositionObj.netPPE)}</strong></td>
+          </tr>
+          <tr>
+            <td colSpan={2}><i>Current assets</i></td>
+          </tr>
+          <tr>
+            <td>Prepaid Insurance</td>
+            <td>{numberWithCommas(financialPositionObj.prepaidInsurance)}</td>
+          </tr>
+          <tr>
+            <td>Inventory</td>
+            <td>{numberWithCommas(financialPositionObj.inventory)}</td>
+          </tr>
+          <tr>
+            <td>Prepaid Rent</td>
+            <td>{numberWithCommas(financialPositionObj.prepaidRent)}</td>
+          </tr>
+          <tr>
+            <td>Accounts Receivable</td>
+            <td>{numberWithCommas(financialPositionObj.accountsReceivable)}</td>
+          </tr>
+          <tr>
+            <td>Cash</td>
+            <td>{numberWithCommas(financialPositionObj.cash)}</td>
+          </tr>
+          <tr>
+            <td>Total Current Assets</td>
+            <td><strong>{numberWithCommas(financialPositionObj.totalCurrentAssets)}</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Total Assets</strong></td>
+            <td><strong>{numberWithCommas(financialPositionObj.totalAssets)}</strong></td>
+          </tr>
+          <tr>
+            <td colSpan={2}><u>Equity and Liabilities</u></td>
+          </tr>
+          <tr>
+            <td colSpan={2}><i>Equity</i></td>
+          </tr>
+          <tr>
+            <td>Share Capital- Ordinary</td>
+            <td>{numberWithCommas(-financialPositionObj.shareCap)}</td>
+          </tr>
+          <tr>
+            <td>Retained Earnings (deficit)</td>
+            <td>{numberWithCommas(financialPositionObj.retainedEarnings)}</td>
+          </tr>
+          <tr>
+            <td>Total Equity</td>
+            <td><strong>{numberWithCommas(financialPositionObj.totalEquity)}</strong></td>
+          </tr>
+          <tr>
+            <td colSpan={2}><i>Non-current Liabilities</i></td>
+          </tr>
+          <tr>
+            <td>Bank Loan</td>
+            <td>{numberWithCommas(-financialPositionObj.bankLoan)}</td>
+          </tr>
+          <tr>
+            <td colSpan={2}><i>Current Liabilities</i></td>
+          </tr>
+          <tr>
+            <td>Accounts Payable</td>
+            <td>{numberWithCommas(-financialPositionObj.accountsPayable)}</td>
+          </tr>
+          <tr>
+            <td>Interest Payable</td>
+            <td>{numberWithCommas(financialPositionObj.interestPayable)}</td>
+          </tr>
+          <tr>
+            <td>Total Current Liabilities</td>
+            <td>{numberWithCommas(financialPositionObj.totalCurrentLiabilities)}</td>
+          </tr>
+          <tr>
+            <td><strong>Total Equity and Liabilities</strong></td>
+            <td><strong>{numberWithCommas(financialPositionObj.totalEquityAndLiabilities)}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
 
     </div>
   );
