@@ -45,6 +45,10 @@ const journalOpts: JournalItem[] = [
   newJournalItem('received_payment_prev_sales', 'received payment from clients from previous sales', 'Cash', 'Accounts Receivable'),
   newJournalItem('paid_inventories_purchased_account', 'paid for inventories purchased on account', 'Accounts payable', 'Cash'),
   newJournalItem('paid_salaries', '  paid for the salaries of the first semester of the year.', 'Salaries and Wages Expense ', 'Cash'),
+
+  newJournalItem('interest_income_earned', 'Interest income earned on cash and cash equivalent paid in cash', 'Cash', 'Interest Income'),
+  newJournalItem('interest_expense_paid', 'Interest expense paid in cash', 'Interest Expenses', 'Interest Income'),
+
 ];
 
 interface AddedItem {
@@ -393,7 +397,7 @@ function App() {
       <input type="text" placeholder="As of (END MONTH)" value={incomeStatementAsOf} onChange={(e) => { setIncomeStatementAsOf(e.target.value); }} />
       <h3>Depreciation (per year):</h3>
       <input type="number" placeholder="Sum" value={depreciationSum} onChange={(e) => { setDepreciationSum(Number(e.target.value)); }} />
-      <h3>Interest paid:</h3>
+      <h3>NET Interest paid: (NB -- although interest expense is recorded in journal, this must be calculated manually here)</h3>
       <input type="number" placeholder="Sum" value={interestPaidSum} onChange={(e) => { setInterestPaidSum(Number(e.target.value)); }} />
 
       <h2>Add adjustment:</h2>
