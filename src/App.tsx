@@ -47,7 +47,7 @@ const journalOpts: JournalItem[] = [
   newJournalItem('paid_salaries', '  paid for the salaries of the first semester of the year.', 'Salaries and Wages Expense ', 'Cash'),
 
   newJournalItem('interest_income_earned', 'Interest income earned on cash and cash equivalent paid in cash', 'Cash', 'Interest Income'),
-  newJournalItem('interest_expense_paid', 'Interest expense paid in cash', 'Interest Expenses', 'Interest Income'),
+  newJournalItem('interest_expense_paid', 'Interest expense paid in cash', 'Interest Expenses', 'Cash'),
 
 ];
 
