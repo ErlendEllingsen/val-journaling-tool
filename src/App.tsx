@@ -7,7 +7,7 @@ import { Button, Col, Container, Row } from 'react-bootstrap';
 
 
 function numberWithCommas(x: number) {
-  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return x.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 interface JournalItem {
@@ -475,10 +475,11 @@ function App() {
                   <th style={{ minWidth: 300 }}>Item</th>
                   <th style={{ minWidth: 150 }}>Dr.</th>
                   <th style={{ minWidth: 150 }}>Cr.</th>
+                  <th style={{ minWidth: 30 }}></th>
                 </tr>
               </thead>
               <tbody>
-                {addedItems.map((el, index) => {
+                {addedItems.map((el, index: number) => {
                   return <>
                     <tr className='first-row'>
                       <td>{index + 1}</td>
@@ -486,6 +487,13 @@ function App() {
                       <td className='line-debit'>{el.item.debitPost}</td>
                       <td>{numberWithCommas(el.sum)}</td>
                       <td></td>
+                      <td rowSpan={2}>
+                        <button onClick={() => { 
+                          const addedItemsCop = JSON.parse(JSON.stringify(addedItems));
+                          addedItemsCop.splice(index,1);
+                          setAddedItems(addedItemsCop);  
+                        }} >Del</button>
+                      </td>
                     </tr>
                     <tr className='second-row'>
                       <td></td>
@@ -530,7 +538,7 @@ function App() {
       </Container>
 
       <hr />
-      <h1>Manual inputs</h1>
+      <h1>Manual inputs for income statement</h1>
       <h2>As of (31.X):</h2>
       <input type="text" placeholder="As of (END MONTH)" value={incomeStatementAsOf} onChange={(e) => { setIncomeStatementAsOf(e.target.value); }} />
       <h3>Depreciation (per year):</h3>
