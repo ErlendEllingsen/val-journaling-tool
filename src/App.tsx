@@ -262,7 +262,7 @@ function App() {
     if (adj.post === 'inventory') {
 
       const prevValue = (balance as any)['costOfGoodsSold'] as number;
-      const changeInCostOfGoods = prevValue - adj.customValue;
+      const changeInCostOfGoods = prevValue + adj.customValue;
 
       (balance as any)['costOfGoodsSold'] = changeInCostOfGoods;
       appliedAdjustments.push({ date: adj.date, post: 'costOfGoodsSold', adjustmentValue: changeInCostOfGoods });
