@@ -312,7 +312,7 @@ function App() {
     totalAssets: 0,
 
     // rhs
-    shareCap: initBalance.shareCap,
+    shareCap: 0,
     retainedEarnings: initBalance.retainedEarnings + (transferNetIncomeToRetainedEarnings === 1 ? balance.netIncome : 0),
     totalEquity: 0,
     bankLoanST: -initBalance.bankLoanST, // we need to inverse the bank loans:)
@@ -369,6 +369,7 @@ function App() {
 
 
   // FINALLY BEFORE NET VALUES - SWAP THE SIGNS FOR BANK LOANS etc
+  financialPositionObj.shareCap = -financialPositionObj.shareCap + initBalance.shareCap;
   financialPositionObj.bankLoanST *= -1;
   financialPositionObj.bankLoanLT *= -1;
   financialPositionObj.accountsPayable *= -1;
