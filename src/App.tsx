@@ -578,7 +578,7 @@ function App() {
       <input type="text" placeholder="As of (END MONTH)" value={incomeStatementAsOf} onChange={(e) => { setIncomeStatementAsOf(e.target.value); }} />
       <h3>Override: Depreciation (per year):</h3>
       <input type="number" placeholder="Sum" value={depreciationSum} onChange={(e) => { setDepreciationSum(Number(e.target.value)); }} />
-      <h3>Override: NET Interest paid: (NB -- although interest expense is recorded in journal, this must be calculated manually here)</h3>
+      <h3>Override: NET Interest paid:</h3>
       <input type="number" placeholder="Sum" value={interestPaidSum} onChange={(e) => { setInterestPaidSum(Number(e.target.value)); }} />
       <h3>Transfer Net Income to Retained Earnings?</h3>
       {/* transferNetIncomeToRetainedEarnings */}
