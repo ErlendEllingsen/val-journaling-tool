@@ -1,0 +1,101 @@
+{
+  "addedItems": [
+    {
+      "item": {
+        "id": "bought_ppe_credit",
+        "sourceText": " bought ppe/equipment/machinery (paid credit)",
+        "debitPost": "Property, Plant & Equipment",
+        "creditPost": "Accounts payable"
+      },
+      "sum": 150,
+      "date": "01.01"
+    },
+    {
+      "item": {
+        "id": "bought_inventory_cash",
+        "sourceText": " bought inventory (cash)",
+        "debitPost": "Inventory",
+        "creditPost": "Cash"
+      },
+      "sum": 80,
+      "date": "01.01"
+    },
+    {
+      "item": {
+        "id": "goods_sold_account",
+        "sourceText": " sold goods on account",
+        "debitPost": "Accounts Receivable",
+        "creditPost": "Sales Revenue"
+      },
+      "sum": 100,
+      "date": "01.01"
+    },
+    {
+      "item": {
+        "id": "interest_income_earned",
+        "sourceText": "Interest income earned on cash and cash equivalent paid in cash",
+        "debitPost": "Cash",
+        "creditPost": "Interest Income"
+      },
+      "sum": 3,
+      "date": "01.01"
+    },
+    {
+      "item": {
+        "id": "got_loan_lt",
+        "sourceText": "got a loan (LT)",
+        "debitPost": "Cash",
+        "creditPost": "Bank Loan (LT)"
+      },
+      "sum": 100,
+      "date": "01.01"
+    },
+    {
+      "item": {
+        "id": "interest_expense_paid",
+        "sourceText": "Interest expense paid in cash",
+        "debitPost": "Interest Expenses",
+        "creditPost": "Cash"
+      },
+      "sum": 5,
+      "date": "01.01"
+    },
+    {
+      "item": {
+        "id": "paid_back_loan_lt",
+        "sourceText": "downpayment on loan (LT)",
+        "debitPost": "Bank Loan (LT)",
+        "creditPost": "Cash"
+      },
+      "sum": 70,
+      "date": "01.01"
+    },
+    {
+      "item": {
+        "id": "goods_reduced_accounts",
+        "sourceText": " reduce inventory (against cost of goods sold)",
+        "debitPost": "Cost of goods sold",
+        "creditPost": "Inventory"
+      },
+      "sum": 30,
+      "date": "01.01"
+    }
+  ],
+  "adjustments": [],
+  "incomeStatementAsOf": "",
+  "depreciationSum": 0,
+  "interestPaidSum": 0,
+  "transferNetIncomeToRetainedEarnings": 1,
+  "initBalance": {
+    "PPE": 0,
+    "accDepr": 0,
+    "inventory": 0,
+    "accountsReceivable": 0,
+    "cash": 200,
+    "shareCap": 200,
+    "retainedEarnings": 0,
+    "bankLoanST": 0,
+    "bankLoanLT": 0,
+    "accountsPayable": 0
+  }
+}

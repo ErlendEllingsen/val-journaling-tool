@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import copy from 'copy-to-clipboard';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Button, Col, Container, Row } from 'react-bootstrap';
+import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
 
 
 function numberWithCommas(x: number) {
@@ -34,11 +34,14 @@ const journalOpts: JournalItem[] = [
   newJournalItem('paid_back_loan_lt', 'downpayment on loan (LT)', 'Bank Loan (LT)', 'Cash'),
   newJournalItem('paid_back_loan_st', 'downpayment on loan (ST)', 'Bank Loan (ST)', 'Cash'),
 
-  newJournalItem('bought_ppe_cash', ' bought equipment (paid cash)', 'Property, Plant & Equipment', 'Cash'),
-  newJournalItem('bought_ppe_credit', ' bought equipment (paid credit)', 'Property, Plant & Equipment', 'Accounts payable'),
+  newJournalItem('bought_ppe_cash', ' bought ppe/equipment/machinery (paid cash)', 'Property, Plant & Equipment', 'Cash'),
+  newJournalItem('bought_ppe_credit', ' bought ppe/equipment/machinery (paid credit)', 'Property, Plant & Equipment', 'Accounts payable'),
 
   newJournalItem('bought_inventory_cash', ' bought inventory (cash)', 'Inventory', 'Cash'),
   newJournalItem('bought_inventory_credit', ' bought inventory (credit)', 'Inventory', 'Accounts payable'),
+
+  newJournalItem('goods_reduced_accounts', ' reduce inventory (against cost of goods sold)', 'Cost of goods sold', 'Inventory'),
+
 
   newJournalItem('goods_sold_account', ' sold goods on account', 'Accounts Receivable', 'Sales Revenue'),
   newJournalItem('goods_sold_cash', ' sold goods got cash', 'Cash', 'Sales Revenue'),
@@ -95,13 +98,15 @@ function App() {
 
     const { addedItems, adjustments, incomeStatementAsOf,
       depreciationSum,
-      interestPaidSum } = importedObject;
+      interestPaidSum, tansferNetIncomeToRetainedEarnings, initBalance } = importedObject;
 
     setAddedItems(addedItems);
     setAdjustments(adjustments);
     setIncomeStatementAsOf(incomeStatementAsOf);
     setDepreciationSum(depreciationSum);
     setInterestPaidSum(interestPaidSum);
+    setTransferNetIncomeToRetainedEarnings(transferNetIncomeToRetainedEarnings);
+    setInitBalance(initBalance);
   }
 
   const journalExport = () => {
@@ -111,7 +116,9 @@ function App() {
       adjustments,
       incomeStatementAsOf,
       depreciationSum,
-      interestPaidSum
+      interestPaidSum,
+      transferNetIncomeToRetainedEarnings,
+      initBalance
     }
 
     const exportVal = JSON.stringify(exportObject);
@@ -158,6 +165,7 @@ function App() {
 
   const [depreciationSum, setDepreciationSum] = useState(0);
   const [interestPaidSum, setInterestPaidSum] = useState(0);
+  const [transferNetIncomeToRetainedEarnings, setTransferNetIncomeToRetainedEarnings] = useState(1);
 
   // Adjustments
   const [adjustmentDate, setAdjustmentDate] = useState('');
@@ -217,7 +225,7 @@ function App() {
         break;
       case 'bought_inventory_cash':
       case 'bought_inventory_credit':
-        balance.costOfGoodsSold += sum;
+        // balance.costOfGoodsSold += sum;
         break;
       case 'prepaid_rent_cash':
         balance.rentExpense += sum;
@@ -230,11 +238,20 @@ function App() {
       case 'prepaid_insurance':
         balance.insuranceExpense += sum;
         break;
+      case 'interest_income_earned':
+        balance.interestExpense -= sum;
+        break;
+      case 'interest_expense_paid':
+        balance.interestExpense += sum;
+        break;
+      case 'goods_reduced_accounts':
+        balance.costOfGoodsSold += sum;
+      break;
     }
   }
 
-  balance.depreciationExpense = depreciationSum;
-  balance.interestExpense = interestPaidSum;
+  balance.depreciationExpense = (balance.depreciationExpense === 0) ? depreciationSum : balance.depreciationExpense;
+  balance.interestExpense = (balance.interestExpense === 0) ? interestPaidSum : balance.interestExpense;; 
 
   const preAdjustmentBalance = JSON.parse(JSON.stringify(balance));
 
@@ -280,34 +297,36 @@ function App() {
 
   preAdjustmentBalance.netIncome = preAdjustmentBalance.incomeFromOperations - preAdjustmentBalance.interestExpense;
 
-
   // Calculate financial position
   let financialPositionObj = {
     // lhs
-    ppe: 0,
-    accDepr: preAdjustmentBalance.depreciationExpense,
+    ppe: initBalance.PPE,
+    accDepr: initBalance.accDepr + preAdjustmentBalance.depreciationExpense,
     netPPE: 0,
     prepaidInsurance: 0,
-    inventory: preAdjustmentBalance.costOfGoodsSold,
+    inventory: initBalance.inventory,
     prepaidRent: preAdjustmentBalance.rentExpense,
-    accountsReceivable: 0,
-    cash: 0,
+    accountsReceivable: initBalance.accountsReceivable,
+    cash: initBalance.cash,
     totalCurrentAssets: 0,
     totalAssets: 0,
 
     // rhs
-    shareCap: 0,
-    retainedEarnings: balance.netIncome,
+    shareCap: initBalance.shareCap,
+    retainedEarnings: initBalance.retainedEarnings + (transferNetIncomeToRetainedEarnings === 1 ? balance.netIncome : 0),
     totalEquity: 0,
-    bankLoanST: 0,
-    bankLoanLT: 0,
-    accountsPayable: 0,
-    interestPayable: preAdjustmentBalance.interestExpense,
+    bankLoanST: -initBalance.bankLoanST, // we need to inverse the bank loans:)
+    bankLoanLT: -initBalance.bankLoanLT, // we need to inverse the bank loans:)
+    accountsPayable: -initBalance.accountsPayable,
+    interestPayable: 0,
     totalCurrentLiabilities: 0,
     totalEquityAndLiabilities: 0,
   }
 
   const processLineItem = (postName: string, finPosName: string, item: AddedItem) => {
+
+    if (postName === 'Bank Loan (LT)') console.log(postName, 'debit:', item.item.debitPost, 'credit:', item.item.creditPost, item.sum);
+
     if (item.item.debitPost.toLowerCase().trim() === postName.toLowerCase().trim()) (financialPositionObj as any)[finPosName] += item.sum;
     if (item.item.creditPost.toLowerCase().trim() === postName.toLowerCase().trim()) (financialPositionObj as any)[finPosName] -= item.sum;
   }
@@ -322,6 +341,7 @@ function App() {
     processLineItem('Bank Loan (ST)', 'bankLoanST', item);
 
     processLineItem('Accounts payable', 'accountsPayable', item);
+    processLineItem('Inventory', 'inventory', item);
 
     //     accountsPayable
     // interestPayable
@@ -330,7 +350,7 @@ function App() {
   // If adjustment -- clear existing value
   const adjustmentPostNames = appliedAdjustments.map((el) => { return el.post });
 
-  if (adjustmentPostNames.includes('depreciationExpense')) financialPositionObj.accDepr = 0;
+  if (adjustmentPostNames.includes('depreciationExpense')) financialPositionObj.accDepr = initBalance.accDepr;
   if (adjustmentPostNames.includes('insuranceExpense')) financialPositionObj.prepaidInsurance = 0;
   // if (adjustmentPostNames.includes('interestExpense')) financialPositionObj.interestExpense = 0;
   // if (adjustmentPostNames.includes('rentExpense')) financialPositionObj.prepaidRent = 0;
@@ -344,18 +364,24 @@ function App() {
     if (post === 'depreciationExpense') financialPositionObj.accDepr += adjustmentValue;
     if (post === 'costOfGoodsSold') financialPositionObj.inventory -= adjustmentValue;
     if (post === 'rentExpense') financialPositionObj.prepaidRent -= adjustmentValue;
-    if (post === 'interestExpense') financialPositionObj.interestPayable -= adjustmentValue;
+    // if (post === 'interestExpense') financialPositionObj.interestPayable -= adjustmentValue; // TODO -- Interest payable !== Interest expense
   }
+
+
+  // FINALLY BEFORE NET VALUES - SWAP THE SIGNS FOR BANK LOANS etc
+  financialPositionObj.bankLoanST *= -1;
+  financialPositionObj.bankLoanLT *= -1;
+  financialPositionObj.accountsPayable *= -1;
 
   // Calculate net ops
   financialPositionObj.netPPE = financialPositionObj.ppe - financialPositionObj.accDepr;
   financialPositionObj.totalCurrentAssets = financialPositionObj.prepaidInsurance + financialPositionObj.inventory + financialPositionObj.prepaidRent + financialPositionObj.accountsReceivable + financialPositionObj.cash;
   financialPositionObj.totalAssets = financialPositionObj.netPPE + financialPositionObj.totalCurrentAssets;
 
-  financialPositionObj.totalEquity = (-financialPositionObj.shareCap) + financialPositionObj.retainedEarnings;
+  financialPositionObj.totalEquity = (financialPositionObj.shareCap) + financialPositionObj.retainedEarnings;
 
-  financialPositionObj.totalCurrentLiabilities = -financialPositionObj.accountsPayable + financialPositionObj.interestPayable;
-  financialPositionObj.totalEquityAndLiabilities = financialPositionObj.totalEquity + (-financialPositionObj.bankLoanLT -financialPositionObj.bankLoanST) + financialPositionObj.totalCurrentLiabilities;
+  financialPositionObj.totalCurrentLiabilities = financialPositionObj.accountsPayable + financialPositionObj.interestPayable;
+  financialPositionObj.totalEquityAndLiabilities = financialPositionObj.totalEquity + (financialPositionObj.bankLoanLT + financialPositionObj.bankLoanST) + financialPositionObj.totalCurrentLiabilities;
 
   // totalCurrentLiabilities
   // totalEquityAndLiabilities
@@ -363,6 +389,11 @@ function App() {
   return (
     <div className="App">
       <h1>Journaling tool</h1>
+      <Button variant="primary" onClick={(e) => {
+        journalImport();
+      }}>Import</Button><Button variant="primary" onClick={(e) => {
+        journalExport();
+      }}>Export</Button>
       <Container fluid={true}>
         <Row>
           <Col><h1>Init/Opening balance</h1>
@@ -456,16 +487,19 @@ function App() {
               </tbody>
             </table>
           </Col>
-          <Col></Col>
+          <Col>
+            {initBalanceTotalEquityAndLiabilities === initBalanceTotalAssets && <>
+              <Alert variant={'success'}><strong>OK</strong><br /> Init balance OK. LHS = RHS</Alert></>}
+            {initBalanceTotalEquityAndLiabilities !== initBalanceTotalAssets && <>
+              <Alert variant={'danger'}>
+                <strong>ERROR</strong><br />
+                Init balance invalid. LHS (total assets) must match RHS (equity+liabilities)</Alert>
+            </>}
+          </Col>
         </Row>
         <Row>
           <Col>
             <h1>Journaling</h1>
-            <Button variant="primary" onClick={(e) => {
-              journalImport();
-            }}>Import</Button><Button variant="primary" onClick={(e) => {
-              journalExport();
-            }}>Export</Button>
             <br />
             <table>
               <thead>
@@ -488,11 +522,11 @@ function App() {
                       <td>{numberWithCommas(el.sum)}</td>
                       <td></td>
                       <td rowSpan={2}>
-                        <button onClick={() => { 
+                        <Button variant={'dark'} onClick={() => { 
                           const addedItemsCop = JSON.parse(JSON.stringify(addedItems));
                           addedItemsCop.splice(index,1);
                           setAddedItems(addedItemsCop);  
-                        }} >Del</button>
+                        }} ><i className="bi bi-trash"></i></Button>
                       </td>
                     </tr>
                     <tr className='second-row'>
@@ -541,10 +575,25 @@ function App() {
       <h1>Manual inputs for income statement</h1>
       <h2>As of (31.X):</h2>
       <input type="text" placeholder="As of (END MONTH)" value={incomeStatementAsOf} onChange={(e) => { setIncomeStatementAsOf(e.target.value); }} />
-      <h3>Depreciation (per year):</h3>
+      <h3>Override: Depreciation (per year):</h3>
       <input type="number" placeholder="Sum" value={depreciationSum} onChange={(e) => { setDepreciationSum(Number(e.target.value)); }} />
-      <h3>NET Interest paid: (NB -- although interest expense is recorded in journal, this must be calculated manually here)</h3>
+      <h3>Override: NET Interest paid: (NB -- although interest expense is recorded in journal, this must be calculated manually here)</h3>
       <input type="number" placeholder="Sum" value={interestPaidSum} onChange={(e) => { setInterestPaidSum(Number(e.target.value)); }} />
+      <h3>Transfer Net Income to Retained Earnings?</h3>
+      {/* transferNetIncomeToRetainedEarnings */}
+      <input type="radio" id="doTransferEarningsMale" name="doTransferEarnings" 
+        value={1} 
+        checked={transferNetIncomeToRetainedEarnings === 1}
+        onChange={() => { setTransferNetIncomeToRetainedEarnings(1); }}
+      />
+      <label htmlFor="doTransferEarningsMale">Yes</label>{' '}
+      <input type="radio" id="doTransferEarningsFemale" name="doTransferEarnings" 
+        value={0} 
+        checked={transferNetIncomeToRetainedEarnings === 0}
+        onChange={() => { setTransferNetIncomeToRetainedEarnings(0); }}
+      />
+      <label htmlFor="doTransferEarningsFemale">No</label><br />
+
 
       <h2>Add adjustment:</h2>
       <label htmlFor="adjustment_date">Date</label>
@@ -677,7 +726,7 @@ function App() {
 
       <Container fluid={true}>
         <Row>
-          <Col><h1>IncomE statement as of 31.{incomeStatementAsOf}</h1>
+          <Col><h1>Income statement as of 31.{incomeStatementAsOf}</h1>
             <table>
               <thead>
                 <tr>
@@ -738,9 +787,18 @@ function App() {
                   <td>{numberWithCommas(balance.netIncome)}</td>
                 </tr>
               </tbody>
-            </table></Col>
+            </table>
+            <hr />
+           
+
+            </Col>
           <Col>
             <h1>Financial Position as of 31.{incomeStatementAsOf}</h1>
+            {financialPositionObj.totalAssets !== financialPositionObj.totalEquityAndLiabilities && <>
+              <Alert variant={'danger'}>
+                <strong>BALANCE ERROR</strong><br />
+                There seems to be an inbalance between LHS (total assets) and RHS (equity + liabilities). Be aware!</Alert>
+            </>}
             <table>
               <thead>
                 <tr>
@@ -803,7 +861,7 @@ function App() {
                 </tr>
                 <tr>
                   <td>Share Capital- Ordinary</td>
-                  <td>{numberWithCommas(-financialPositionObj.shareCap)}</td>
+                  <td>{numberWithCommas(financialPositionObj.shareCap)}</td>
                 </tr>
                 <tr>
                   <td>Retained Earnings (deficit)</td>
@@ -818,18 +876,18 @@ function App() {
                 </tr>
                 <tr>
                   <td>Bank Loan (LT)</td>
-                  <td>{numberWithCommas(-financialPositionObj.bankLoanLT)}</td>
+                  <td>{numberWithCommas(financialPositionObj.bankLoanLT)}</td>
                 </tr>
                 <tr>
                   <td colSpan={2}><i>Current Liabilities</i></td>
                 </tr>
                 <tr>
                   <td>Bank Loan (ST)</td>
-                  <td>{numberWithCommas(-financialPositionObj.bankLoanST)}</td>
+                  <td>{numberWithCommas(financialPositionObj.bankLoanST)}</td>
                 </tr>
                 <tr>
                   <td>Accounts Payable</td>
-                  <td>{numberWithCommas(-financialPositionObj.accountsPayable)}</td>
+                  <td>{numberWithCommas(financialPositionObj.accountsPayable)}</td>
                 </tr>
                 <tr>
                   <td>Interest Payable</td>
