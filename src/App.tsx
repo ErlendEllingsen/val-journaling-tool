@@ -364,7 +364,7 @@ function App() {
     if (post === 'depreciationExpense') financialPositionObj.accDepr += adjustmentValue;
     if (post === 'costOfGoodsSold') financialPositionObj.inventory -= adjustmentValue;
     if (post === 'rentExpense') financialPositionObj.prepaidRent -= adjustmentValue;
-    // if (post === 'interestExpense') financialPositionObj.interestPayable -= adjustmentValue; // TODO -- Interest payable !== Interest expense
+    if (post === 'interestExpense') financialPositionObj.interestPayable += adjustmentValue; // TODO -- Interest payable !== Interest expense
   }
 
 
@@ -803,6 +803,10 @@ function App() {
             </Col>
           <Col>
             <h1>Financial Position as of 31.{incomeStatementAsOf}</h1>
+            
+            {financialPositionObj.totalAssets === financialPositionObj.totalEquityAndLiabilities && <>
+              <Alert variant={'success'}><strong>OK</strong><br /> Balance match OK. LHS=RHS</Alert>
+            </>}
             {financialPositionObj.totalAssets !== financialPositionObj.totalEquityAndLiabilities && <>
               <Alert variant={'danger'}>
                 <strong>BALANCE ERROR</strong><br />

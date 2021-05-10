@@ -1,0 +1,192 @@
+{
+  "addedItems": [
+    {
+      "item": {
+        "id": "shareholders_invested",
+        "sourceText": "shareholders invested",
+        "debitPost": "Cash",
+        "creditPost": "Shareholder cap"
+      },
+      "sum": 1000000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "got_loan_lt",
+        "sourceText": "got a loan (LT)",
+        "debitPost": "Cash",
+        "creditPost": "Bank Loan (LT)"
+      },
+      "sum": 500000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "prepaid_rent_cash",
+        "sourceText": "rented offices for the whole of a year (cash)",
+        "debitPost": "Prepaid rent",
+        "creditPost": "Cash"
+      },
+      "sum": 300000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "bought_ppe_cash",
+        "sourceText": " bought ppe/equipment/machinery (paid cash)",
+        "debitPost": "Property, Plant & Equipment",
+        "creditPost": "Cash"
+      },
+      "sum": 500000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "bought_inventory_credit",
+        "sourceText": " bought inventory (credit)",
+        "debitPost": "Inventory",
+        "creditPost": "Accounts payable"
+      },
+      "sum": 300000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "goods_sold_account",
+        "sourceText": " sold goods on account",
+        "debitPost": "Accounts Receivable",
+        "creditPost": "Sales Revenue"
+      },
+      "sum": 100000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "prepaid_insurance",
+        "sourceText": "paid for a one-year insurance policy (cash)",
+        "debitPost": "Prepaid Insurance",
+        "creditPost": "Cash"
+      },
+      "sum": 24000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "bought_inventory_credit",
+        "sourceText": " bought inventory (credit)",
+        "debitPost": "Inventory",
+        "creditPost": "Accounts payable"
+      },
+      "sum": 200000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "received_payment_prev_sales",
+        "sourceText": "received payment from clients from previous sales",
+        "debitPost": "Cash",
+        "creditPost": "Accounts Receivable"
+      },
+      "sum": 50000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "goods_sold_account",
+        "sourceText": " sold goods on account",
+        "debitPost": "Accounts Receivable",
+        "creditPost": "Sales Revenue"
+      },
+      "sum": 500000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "received_payment_prev_sales",
+        "sourceText": "received payment from clients from previous sales",
+        "debitPost": "Cash",
+        "creditPost": "Accounts Receivable"
+      },
+      "sum": 150000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "paid_inventories_purchased_account",
+        "sourceText": "paid for inventories purchased on account",
+        "debitPost": "Accounts payable",
+        "creditPost": "Cash"
+      },
+      "sum": 300000,
+      "date": ""
+    },
+    {
+      "item": {
+        "id": "paid_salaries",
+        "sourceText": "  paid for the salaries of the first semester of the year.",
+        "debitPost": "Salaries and Wages Expense ",
+        "creditPost": "Cash"
+      },
+      "sum": 200000,
+      "date": ""
+    }
+  ],
+  "adjustments": [
+    {
+      "date": "",
+      "post": "depreciationExpense",
+      "useValueFromBalance": true,
+      "customValue": 0,
+      "valueFromBalanceDurationPeriod": 12,
+      "valueFromBalanceUsagePeriod": 5
+    },
+    {
+      "date": "",
+      "post": "insuranceExpense",
+      "useValueFromBalance": true,
+      "customValue": 0,
+      "valueFromBalanceDurationPeriod": 12,
+      "valueFromBalanceUsagePeriod": 4
+    },
+    {
+      "date": "",
+      "post": "interestExpense",
+      "useValueFromBalance": true,
+      "customValue": 0,
+      "valueFromBalanceDurationPeriod": 2,
+      "valueFromBalanceUsagePeriod": 1
+    },
+    {
+      "date": "",
+      "post": "inventory",
+      "useValueFromBalance": false,
+      "customValue": 300000,
+      "valueFromBalanceDurationPeriod": 0,
+      "valueFromBalanceUsagePeriod": 0
+    },
+    {
+      "date": "",
+      "post": "rentExpense",
+      "useValueFromBalance": true,
+      "customValue": 0,
+      "valueFromBalanceDurationPeriod": 2,
+      "valueFromBalanceUsagePeriod": 1
+    }
+  ],
+  "incomeStatementAsOf": "6",
+  "depreciationSum": 45000,
+  "interestPaidSum": 25000,
+  "transferNetIncomeToRetainedEarnings": 1,
+  "initBalance": {
+    "PPE": 0,
+    "accDepr": 0,
+    "inventory": 0,
+    "accountsReceivable": 0,
+    "cash": 0,
+    "shareCap": 0,
+    "retainedEarnings": 0,
+    "bankLoanST": 0,
+    "bankLoanLT": 0,
+    "accountsPayable": 0
+  }
+}
