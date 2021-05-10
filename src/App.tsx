@@ -658,6 +658,7 @@ function App() {
             <th style={{ minWidth: 300 }}>Item</th>
             <th style={{ minWidth: 150 }}>Dr.</th>
             <th style={{ minWidth: 150 }}>Cr.</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -706,6 +707,13 @@ function App() {
                 <td className='line-debit'>{debitItem}</td>
                 <td>{numberWithCommas(el.adjustmentValue)}</td>
                 <td></td>
+                <td rowSpan={2}>
+                  <Button variant={'dark'} onClick={() => { 
+                    const adjustmentsCop = JSON.parse(JSON.stringify(adjustments));
+                    adjustmentsCop.splice(index,1);
+                    setAdjustments(adjustmentsCop);  
+                  }} ><i className="bi bi-trash"></i></Button>
+                </td>
               </tr>
               <tr className='second-row'>
                 <td></td>
