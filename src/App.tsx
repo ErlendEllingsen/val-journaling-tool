@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import copy from 'copy-to-clipboard';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Button, Col, Container, Row } from 'react-bootstrap';
 
 
 function numberWithCommas(x: number) {
@@ -27,8 +29,10 @@ const newJournalItem = (id: string, sourceText: string, debitPost: string, credi
 
 const journalOpts: JournalItem[] = [
   newJournalItem('shareholders_invested', 'shareholders invested', 'Cash', 'Shareholder cap'),
-  newJournalItem('got_loan', 'got a loan', 'Cash', 'Bank Loan'),
-  newJournalItem('paid_back_loan', 'downpayment on loan', 'Bank Loan', 'Cash'),
+  newJournalItem('got_loan_lt', 'got a loan (LT)', 'Cash', 'Bank Loan (LT)'),
+  newJournalItem('got_loan_st', 'got a loan (ST)', 'Cash', 'Bank Loan (ST)'),
+  newJournalItem('paid_back_loan_lt', 'downpayment on loan (LT)', 'Bank Loan (LT)', 'Cash'),
+  newJournalItem('paid_back_loan_st', 'downpayment on loan (ST)', 'Bank Loan (ST)', 'Cash'),
 
   newJournalItem('bought_ppe_cash', ' bought equipment (paid cash)', 'Property, Plant & Equipment', 'Cash'),
   newJournalItem('bought_ppe_credit', ' bought equipment (paid credit)', 'Property, Plant & Equipment', 'Accounts payable'),
@@ -116,6 +120,34 @@ function App() {
     copy(exportVal);
     console.groupEnd();
     alert('Copied to clipboard');
+  }
+
+  const [initBalance, setInitBalance] = useState({
+    // lhs
+    PPE: 0,
+    accDepr: 0,
+    inventory: 0,
+    accountsReceivable: 0,
+    cash: 0,
+    // rhs
+    shareCap: 0,
+    retainedEarnings: 0,
+    bankLoanST: 0,
+    bankLoanLT: 0,
+    accountsPayable: 0,
+  });
+
+  const initBalanceTotalCurrentAssets = initBalance.inventory + initBalance.accountsReceivable + initBalance.cash;
+  const initBalanceTotalAssets = (initBalance.PPE - initBalance.accDepr) + initBalanceTotalCurrentAssets;
+
+  const initBalanceTotalEquity = initBalance.shareCap + initBalance.retainedEarnings;
+
+  const initBalanceTotalCurrentLiabilities = initBalance.bankLoanST + initBalance.accountsPayable; 
+  const initBalanceTotalLiabilities = initBalance.bankLoanLT + initBalanceTotalCurrentLiabilities; 
+  const initBalanceTotalEquityAndLiabilities = initBalanceTotalEquity + initBalanceTotalLiabilities;
+
+  const setInitBalanceValue = (post: string, value: Number) => {
+    setInitBalance({...initBalance, [post]: value})
   }
 
   const [selectJournalItem, setSelectJournalItem] = useState('');
@@ -267,7 +299,8 @@ function App() {
     shareCap: 0,
     retainedEarnings: balance.netIncome,
     totalEquity: 0,
-    bankLoan: 0,
+    bankLoanST: 0,
+    bankLoanLT: 0,
     accountsPayable: 0,
     interestPayable: preAdjustmentBalance.interestExpense,
     totalCurrentLiabilities: 0,
@@ -285,12 +318,13 @@ function App() {
     processLineItem('Accounts Receivable', 'accountsReceivable', item);
     processLineItem('Cash', 'cash', item);
     processLineItem('Shareholder cap', 'shareCap', item);
-    processLineItem('Bank Loan', 'bankLoan', item);
+    processLineItem('Bank Loan (LT)', 'bankLoanLT', item);
+    processLineItem('Bank Loan (ST)', 'bankLoanST', item);
 
     processLineItem('Accounts payable', 'accountsPayable', item);
 
-  //     accountsPayable
-  // interestPayable
+    //     accountsPayable
+    // interestPayable
   }
 
   // If adjustment -- clear existing value
@@ -306,7 +340,7 @@ function App() {
 
   // Add adjustments 
   for (let applAdj of appliedAdjustments) {
-    const {post, adjustmentValue} = applAdj;
+    const { post, adjustmentValue } = applAdj;
     if (post === 'depreciationExpense') financialPositionObj.accDepr += adjustmentValue;
     if (post === 'costOfGoodsSold') financialPositionObj.inventory -= adjustmentValue;
     if (post === 'rentExpense') financialPositionObj.prepaidRent -= adjustmentValue;
@@ -319,9 +353,9 @@ function App() {
   financialPositionObj.totalAssets = financialPositionObj.netPPE + financialPositionObj.totalCurrentAssets;
 
   financialPositionObj.totalEquity = (-financialPositionObj.shareCap) + financialPositionObj.retainedEarnings;
-  
+
   financialPositionObj.totalCurrentLiabilities = -financialPositionObj.accountsPayable + financialPositionObj.interestPayable;
-  financialPositionObj.totalEquityAndLiabilities = financialPositionObj.totalEquity + (-financialPositionObj.bankLoan) + financialPositionObj.totalCurrentLiabilities;
+  financialPositionObj.totalEquityAndLiabilities = financialPositionObj.totalEquity + (-financialPositionObj.bankLoanLT -financialPositionObj.bankLoanST) + financialPositionObj.totalCurrentLiabilities;
 
   // totalCurrentLiabilities
   // totalEquityAndLiabilities
@@ -329,68 +363,172 @@ function App() {
   return (
     <div className="App">
       <h1>Journaling tool</h1>
-      <h1>Inputs</h1>
-      <h2>Select item:</h2>
-      <select value={selectJournalItem} onChange={(e) => { setSelectJournalItem(e.target.value); }}>
-        <option></option>
-        {journalOpts.map((el) => { return <option value={el.id}>{el.sourceText}</option> })}
-      </select>
+      <Container fluid={true}>
+        <Row>
+          <Col><h1>Init/Opening balance</h1>
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan={2}><u>Assets</u></td>
+                </tr>
+                <tr>
+                  <td>PP&E </td>
+                  <td><input placeholder={'PP&E'} value={initBalance.PPE} onChange={(e) => { setInitBalanceValue('PPE', Number(e.target.value)); }} /></td>
+                </tr>
+                <tr>
+                  <td>Accumulated Depreciation</td>
+                  <td><input placeholder={'accDepr'} value={initBalance.accDepr} onChange={(e) => { setInitBalanceValue('accDepr', Number(e.target.value)); }} /></td>
+                </tr>
+                <tr>
+                  <td colSpan={2}><i>Current assets</i></td>
+                </tr>
+                <tr>
+                  <td>Inventory</td>
+                  <td><input placeholder={'Inventory'} value={initBalance.inventory} onChange={(e) => { setInitBalanceValue('inventory', Number(e.target.value)); }} /></td>
+                </tr>
+                <tr>
+                  <td>Accounts Receivable</td>
+                  <td><input placeholder={'Accounts receivable'} value={initBalance.accountsReceivable} onChange={(e) => { setInitBalanceValue('accountsReceivable', Number(e.target.value)); }} /></td>
+                </tr>
+                <tr>
+                  <td>Cash</td>
+                  <td><input placeholder={'Cash'} value={initBalance.cash} onChange={(e) => { setInitBalanceValue('cash', Number(e.target.value)); }} /></td>
+                </tr>
+                <tr>
+                  <td>Total Current Assets</td>
+                  <td><strong>{numberWithCommas(initBalanceTotalCurrentAssets)}</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>Total Assets</strong></td>
+                  <td><strong>{numberWithCommas(initBalanceTotalAssets)}</strong></td>
+                </tr>
+                <tr>
+                  <td colSpan={2}><u>Equity and Liabilities</u></td>
+                </tr>
+                <tr>
+                  <td colSpan={2}><i>Equity</i></td>
+                </tr>
+                <tr>
+                  <td>Share Capital- Ordinary</td>
+                  <td><input placeholder={'Share cap'} value={initBalance.shareCap} onChange={(e) => { setInitBalanceValue('shareCap', Number(e.target.value)); }} /></td>
+                </tr>
+                <tr>
+                  <td>Retained earnings</td>
+                  <td><input placeholder={'Retained earnings'} value={initBalance.retainedEarnings} onChange={(e) => { setInitBalanceValue('retainedEarnings', Number(e.target.value)); }}  /></td>
+                </tr>
+                <tr>
+                  <td>Total Equity</td>
+                  <td><strong>{numberWithCommas(initBalanceTotalEquity)}</strong></td>
+                </tr>
+                <tr>
+                  <td colSpan={2}><i>Non-current Liabilities</i></td>
+                </tr>
+                <tr>
+                  <td>Bank Loan (Long Term - IBD)</td>
+                  <td><input placeholder={'Bank Loan LT'} value={initBalance.bankLoanLT} onChange={(e) => { setInitBalanceValue('bankLoanLT', Number(e.target.value)); }}   /></td>
+                </tr>
+                <tr>
+                  <td colSpan={2}><i>Current Liabilities</i></td>
+                </tr>
+                <tr>
+                  <td>Accounts Payable</td>
+                  <td><input placeholder={'Accounts Payable'} value={initBalance.accountsPayable} onChange={(e) => { setInitBalanceValue('accountsPayable', Number(e.target.value)); }}   /></td>
+                </tr>
+                <tr>
+                  <td>Bank Loan (Short Term - IBD)</td>
+                  <td><input placeholder={'Bank Loan ST'} value={initBalance.bankLoanST} onChange={(e) => { setInitBalanceValue('bankLoanST', Number(e.target.value)); }}   /></td>
+                </tr>
+                <tr>
+                  <td>Total Current Liabilities</td>
+                  <td><strong>{numberWithCommas(initBalanceTotalCurrentLiabilities)}</strong></td>
+                </tr>
+                
+                <tr>
+                  <td><strong>Total Equity and Liabilities</strong></td>
+                  <td><strong>{numberWithCommas(initBalanceTotalEquityAndLiabilities)}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </Col>
+          <Col></Col>
+        </Row>
+        <Row>
+          <Col>
+            <h1>Journaling</h1>
+            <Button variant="primary" onClick={(e) => {
+              journalImport();
+            }}>Import</Button><Button variant="primary" onClick={(e) => {
+              journalExport();
+            }}>Export</Button>
+            <br />
+            <table>
+              <thead>
+                <tr>
+                  <th>Transaction</th>
+                  <th>Date</th>
+                  <th style={{ minWidth: 300 }}>Item</th>
+                  <th style={{ minWidth: 150 }}>Dr.</th>
+                  <th style={{ minWidth: 150 }}>Cr.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {addedItems.map((el, index) => {
+                  return <>
+                    <tr className='first-row'>
+                      <td>{index + 1}</td>
+                      <td>{el.date}</td>
+                      <td className='line-debit'>{el.item.debitPost}</td>
+                      <td>{numberWithCommas(el.sum)}</td>
+                      <td></td>
+                    </tr>
+                    <tr className='second-row'>
+                      <td></td>
+                      <td></td>
+                      <td className='line-credit'>{el.item.creditPost}</td>
+                      <td></td>
+                      <td>{numberWithCommas(el.sum)}</td>
+                    </tr>
+                  </>;
+                })}
+              </tbody>
+            </table>
+
+          </Col>
+          <Col><h1>Journal entries</h1>
+            <h2>Select item:</h2>
+            <select value={selectJournalItem} onChange={(e) => { setSelectJournalItem(e.target.value); }}>
+              <option></option>
+              {journalOpts.map((el) => { return <option value={el.id}>{el.sourceText}</option> })}
+            </select>
 
 
-      <h2>Enter date:</h2>
-      <input type="string" placeholder="Date" value={selectDate} onChange={(e) => { setSelectDate(e.target.value); }} />
+            <h2>Enter date:</h2>
+            <input type="string" placeholder="Date" value={selectDate} onChange={(e) => { setSelectDate(e.target.value); }} />
 
 
-      <h2>Enter amt:</h2>
-      <input type="number" placeholder="Sum" value={selectSum} onChange={(e) => { setSelectSum(Number(e.target.value)); }} />
+            <h2>Enter amt:</h2>
+            <input type="number" placeholder="Sum" value={selectSum} onChange={(e) => { setSelectSum(Number(e.target.value)); }} />
 
-      <button onClick={(e) => {
+            <Button variant="primary" onClick={(e) => {
 
-        const journOpt = journalOpts.find((el) => { return el.id === selectJournalItem; })
-        if (journOpt === undefined) return;
+              const journOpt = journalOpts.find((el) => { return el.id === selectJournalItem; })
+              if (journOpt === undefined) return;
 
-        setAddedItems(addedItems.concat([{ item: journOpt, sum: selectSum, date: selectDate }]));
-        setSelectJournalItem('');
-        setSelectDate('');
-        setSelectSum(0);
+              setAddedItems(addedItems.concat([{ item: journOpt, sum: selectSum, date: selectDate }]));
+              setSelectJournalItem('');
+              setSelectDate('');
+              setSelectSum(0);
 
-      }}>Add item</button>
+            }}>Add item</Button></Col>
+        </Row>
+      </Container>
 
-      <hr />
-      <h1>Journaling</h1>
-      <button onClick={(el) => { journalImport(); }}>Import</button>
-      <button onClick={(el) => { journalExport(); }}>Export</button>
-      <table>
-        <thead>
-          <tr>
-            <th>Transaction</th>
-            <th>Date</th>
-            <th style={{ minWidth: 300 }}>Item</th>
-            <th style={{ minWidth: 150 }}>Dr.</th>
-            <th style={{ minWidth: 150 }}>Cr.</th>
-          </tr>
-        </thead>
-        <tbody>
-          {addedItems.map((el, index) => {
-            return <>
-              <tr className='first-row'>
-                <td>{index + 1}</td>
-                <td>{el.date}</td>
-                <td className='line-debit'>{el.item.debitPost}</td>
-                <td>{numberWithCommas(el.sum)}</td>
-                <td></td>
-              </tr>
-              <tr className='second-row'>
-                <td></td>
-                <td></td>
-                <td className='line-credit'>{el.item.creditPost}</td>
-                <td></td>
-                <td>{numberWithCommas(el.sum)}</td>
-              </tr>
-            </>;
-          })}
-        </tbody>
-      </table>
       <hr />
       <h1>Manual inputs</h1>
       <h2>As of (31.X):</h2>
@@ -443,10 +581,11 @@ function App() {
 
       <button onClick={(e) => { addAdjustment(); }}>Add adjustment</button>
 
+
+      <hr />
+
+
       <h3>Adjustments:</h3>
-      {JSON.stringify(adjustments)}
-      <h3>Applied adj:</h3>
-      {JSON.stringify(appliedAdjustments)}
       <ul>
         {appliedAdjustments.map((el) => {
           return <li>{el.post}: {numberWithCommas(el.adjustmentValue)} (before: {numberWithCommas((preAdjustmentBalance as any)[el.post])})</li>
@@ -524,171 +663,185 @@ function App() {
       </table>
 
       <hr />
-      <h1>IncomE statement as of 31.{incomeStatementAsOf}</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Post</th>
-            <th>Value (pre adjustment)</th>
-            <th>Value (after adjustment)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Sales revenue</td>
-            <td>{numberWithCommas(preAdjustmentBalance.salesRevenue)}</td>
-            <td>{numberWithCommas(balance.salesRevenue)}</td>
-          </tr>
-          <tr>
-            <td>Cost of goods sold</td>
-            <td>-{numberWithCommas(preAdjustmentBalance.costOfGoodsSold)}</td>
-            <td>-{numberWithCommas(balance.costOfGoodsSold)}</td>
-          </tr>
-          <tr>
-            <td>Gross profit</td>
-            <td><strong>{numberWithCommas(preAdjustmentBalance.grossProfit)}</strong></td>
-            <td><strong>{numberWithCommas(balance.grossProfit)}</strong></td>
-          </tr>
-          <tr>
-            <td>Salaries and Wages Expense</td>
-            <td>-{numberWithCommas(preAdjustmentBalance.salariesAndWageExpense)}</td>
-            <td>-{numberWithCommas(balance.salariesAndWageExpense)}</td>
-          </tr>
-          <tr>
-            <td>Rent Expense</td>
-            <td>-{numberWithCommas(preAdjustmentBalance.rentExpense)}</td>
-            <td>-{numberWithCommas(balance.rentExpense)}</td>
-          </tr>
-          <tr>
-            <td>Depreciation Expense</td>
-            <td>-{numberWithCommas(preAdjustmentBalance.depreciationExpense)}</td>
-            <td>-{numberWithCommas(balance.depreciationExpense)}</td>
-          </tr>
-          <tr>
-            <td>Insurance Expense</td>
-            <td>-{numberWithCommas(preAdjustmentBalance.insuranceExpense)}</td>
-            <td>-{numberWithCommas(balance.insuranceExpense)}</td>
-          </tr>
-          <tr>
-            <td>Income from operations</td>
-            <td>{numberWithCommas(preAdjustmentBalance.incomeFromOperations)}</td>
-            <td>{numberWithCommas(balance.incomeFromOperations)}</td>
-          </tr>
-          <tr>
-            <td>Interest Expense</td>
-            <td>-{numberWithCommas(preAdjustmentBalance.interestExpense)}</td>
-            <td>-{numberWithCommas(balance.interestExpense)}</td>
-          </tr>
-          <tr>
-            <td>Net Income</td>
-            <td>{numberWithCommas(preAdjustmentBalance.netIncome)}</td>
-            <td>{numberWithCommas(balance.netIncome)}</td>
-          </tr>
-        </tbody>
-      </table>
+
 
       <hr />
-      <h1>Financial Position as of 31.{incomeStatementAsOf}</h1>
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colSpan={2}><u>Assets</u></td>
-          </tr>
-          <tr>
-            <td>Property, Plant and Equipment</td>
-            <td>{numberWithCommas(financialPositionObj.ppe)}</td>
-          </tr>
-          <tr>
-            <td>Accumulate Depraciation </td>
-            <td>-{numberWithCommas(financialPositionObj.accDepr)}</td>
-          </tr>
-          <tr>
-            <td>Net PP&E </td>
-            <td><strong>{numberWithCommas(financialPositionObj.netPPE)}</strong></td>
-          </tr>
-          <tr>
-            <td colSpan={2}><i>Current assets</i></td>
-          </tr>
-          <tr>
-            <td>Prepaid Insurance</td>
-            <td>{numberWithCommas(financialPositionObj.prepaidInsurance)}</td>
-          </tr>
-          <tr>
-            <td>Inventory</td>
-            <td>{numberWithCommas(financialPositionObj.inventory)}</td>
-          </tr>
-          <tr>
-            <td>Prepaid Rent</td>
-            <td>{numberWithCommas(financialPositionObj.prepaidRent)}</td>
-          </tr>
-          <tr>
-            <td>Accounts Receivable</td>
-            <td>{numberWithCommas(financialPositionObj.accountsReceivable)}</td>
-          </tr>
-          <tr>
-            <td>Cash</td>
-            <td>{numberWithCommas(financialPositionObj.cash)}</td>
-          </tr>
-          <tr>
-            <td>Total Current Assets</td>
-            <td><strong>{numberWithCommas(financialPositionObj.totalCurrentAssets)}</strong></td>
-          </tr>
-          <tr>
-            <td><strong>Total Assets</strong></td>
-            <td><strong>{numberWithCommas(financialPositionObj.totalAssets)}</strong></td>
-          </tr>
-          <tr>
-            <td colSpan={2}><u>Equity and Liabilities</u></td>
-          </tr>
-          <tr>
-            <td colSpan={2}><i>Equity</i></td>
-          </tr>
-          <tr>
-            <td>Share Capital- Ordinary</td>
-            <td>{numberWithCommas(-financialPositionObj.shareCap)}</td>
-          </tr>
-          <tr>
-            <td>Retained Earnings (deficit)</td>
-            <td>{numberWithCommas(financialPositionObj.retainedEarnings)}</td>
-          </tr>
-          <tr>
-            <td>Total Equity</td>
-            <td><strong>{numberWithCommas(financialPositionObj.totalEquity)}</strong></td>
-          </tr>
-          <tr>
-            <td colSpan={2}><i>Non-current Liabilities</i></td>
-          </tr>
-          <tr>
-            <td>Bank Loan</td>
-            <td>{numberWithCommas(-financialPositionObj.bankLoan)}</td>
-          </tr>
-          <tr>
-            <td colSpan={2}><i>Current Liabilities</i></td>
-          </tr>
-          <tr>
-            <td>Accounts Payable</td>
-            <td>{numberWithCommas(-financialPositionObj.accountsPayable)}</td>
-          </tr>
-          <tr>
-            <td>Interest Payable</td>
-            <td>{numberWithCommas(financialPositionObj.interestPayable)}</td>
-          </tr>
-          <tr>
-            <td>Total Current Liabilities</td>
-            <td>{numberWithCommas(financialPositionObj.totalCurrentLiabilities)}</td>
-          </tr>
-          <tr>
-            <td><strong>Total Equity and Liabilities</strong></td>
-            <td><strong>{numberWithCommas(financialPositionObj.totalEquityAndLiabilities)}</strong></td>
-          </tr>
-        </tbody>
-      </table>
+
+      <Container fluid={true}>
+        <Row>
+          <Col><h1>IncomE statement as of 31.{incomeStatementAsOf}</h1>
+            <table>
+              <thead>
+                <tr>
+                  <th>Post</th>
+                  <th>Value (pre adjustment)</th>
+                  <th>Value (after adjustment)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Sales revenue</td>
+                  <td>{numberWithCommas(preAdjustmentBalance.salesRevenue)}</td>
+                  <td>{numberWithCommas(balance.salesRevenue)}</td>
+                </tr>
+                <tr>
+                  <td>Cost of goods sold</td>
+                  <td>-{numberWithCommas(preAdjustmentBalance.costOfGoodsSold)}</td>
+                  <td>-{numberWithCommas(balance.costOfGoodsSold)}</td>
+                </tr>
+                <tr>
+                  <td>Gross profit</td>
+                  <td><strong>{numberWithCommas(preAdjustmentBalance.grossProfit)}</strong></td>
+                  <td><strong>{numberWithCommas(balance.grossProfit)}</strong></td>
+                </tr>
+                <tr>
+                  <td>Salaries and Wages Expense</td>
+                  <td>-{numberWithCommas(preAdjustmentBalance.salariesAndWageExpense)}</td>
+                  <td>-{numberWithCommas(balance.salariesAndWageExpense)}</td>
+                </tr>
+                <tr>
+                  <td>Rent Expense</td>
+                  <td>-{numberWithCommas(preAdjustmentBalance.rentExpense)}</td>
+                  <td>-{numberWithCommas(balance.rentExpense)}</td>
+                </tr>
+                <tr>
+                  <td>Depreciation Expense</td>
+                  <td>-{numberWithCommas(preAdjustmentBalance.depreciationExpense)}</td>
+                  <td>-{numberWithCommas(balance.depreciationExpense)}</td>
+                </tr>
+                <tr>
+                  <td>Insurance Expense</td>
+                  <td>-{numberWithCommas(preAdjustmentBalance.insuranceExpense)}</td>
+                  <td>-{numberWithCommas(balance.insuranceExpense)}</td>
+                </tr>
+                <tr>
+                  <td>Income from operations</td>
+                  <td>{numberWithCommas(preAdjustmentBalance.incomeFromOperations)}</td>
+                  <td>{numberWithCommas(balance.incomeFromOperations)}</td>
+                </tr>
+                <tr>
+                  <td>Interest Expense</td>
+                  <td>-{numberWithCommas(preAdjustmentBalance.interestExpense)}</td>
+                  <td>-{numberWithCommas(balance.interestExpense)}</td>
+                </tr>
+                <tr>
+                  <td>Net Income</td>
+                  <td>{numberWithCommas(preAdjustmentBalance.netIncome)}</td>
+                  <td>{numberWithCommas(balance.netIncome)}</td>
+                </tr>
+              </tbody>
+            </table></Col>
+          <Col>
+            <h1>Financial Position as of 31.{incomeStatementAsOf}</h1>
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan={2}><u>Assets</u></td>
+                </tr>
+                <tr>
+                  <td>Property, Plant and Equipment</td>
+                  <td>{numberWithCommas(financialPositionObj.ppe)}</td>
+                </tr>
+                <tr>
+                  <td>Accumulated Depreciation </td>
+                  <td>-{numberWithCommas(financialPositionObj.accDepr)}</td>
+                </tr>
+                <tr>
+                  <td>Net PP&E </td>
+                  <td><strong>{numberWithCommas(financialPositionObj.netPPE)}</strong></td>
+                </tr>
+                <tr>
+                  <td colSpan={2}><i>Current assets</i></td>
+                </tr>
+                <tr>
+                  <td>Prepaid Insurance</td>
+                  <td>{numberWithCommas(financialPositionObj.prepaidInsurance)}</td>
+                </tr>
+                <tr>
+                  <td>Inventory</td>
+                  <td>{numberWithCommas(financialPositionObj.inventory)}</td>
+                </tr>
+                <tr>
+                  <td>Prepaid Rent</td>
+                  <td>{numberWithCommas(financialPositionObj.prepaidRent)}</td>
+                </tr>
+                <tr>
+                  <td>Accounts Receivable</td>
+                  <td>{numberWithCommas(financialPositionObj.accountsReceivable)}</td>
+                </tr>
+                <tr>
+                  <td>Cash</td>
+                  <td>{numberWithCommas(financialPositionObj.cash)}</td>
+                </tr>
+                <tr>
+                  <td>Total Current Assets</td>
+                  <td><strong>{numberWithCommas(financialPositionObj.totalCurrentAssets)}</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>Total Assets</strong></td>
+                  <td><strong>{numberWithCommas(financialPositionObj.totalAssets)}</strong></td>
+                </tr>
+                <tr>
+                  <td colSpan={2}><u>Equity and Liabilities</u></td>
+                </tr>
+                <tr>
+                  <td colSpan={2}><i>Equity</i></td>
+                </tr>
+                <tr>
+                  <td>Share Capital- Ordinary</td>
+                  <td>{numberWithCommas(-financialPositionObj.shareCap)}</td>
+                </tr>
+                <tr>
+                  <td>Retained Earnings (deficit)</td>
+                  <td>{numberWithCommas(financialPositionObj.retainedEarnings)}</td>
+                </tr>
+                <tr>
+                  <td>Total Equity</td>
+                  <td><strong>{numberWithCommas(financialPositionObj.totalEquity)}</strong></td>
+                </tr>
+                <tr>
+                  <td colSpan={2}><i>Non-current Liabilities</i></td>
+                </tr>
+                <tr>
+                  <td>Bank Loan (LT)</td>
+                  <td>{numberWithCommas(-financialPositionObj.bankLoanLT)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={2}><i>Current Liabilities</i></td>
+                </tr>
+                <tr>
+                  <td>Bank Loan (ST)</td>
+                  <td>{numberWithCommas(-financialPositionObj.bankLoanST)}</td>
+                </tr>
+                <tr>
+                  <td>Accounts Payable</td>
+                  <td>{numberWithCommas(-financialPositionObj.accountsPayable)}</td>
+                </tr>
+                <tr>
+                  <td>Interest Payable</td>
+                  <td>{numberWithCommas(financialPositionObj.interestPayable)}</td>
+                </tr>
+                <tr>
+                  <td>Total Current Liabilities</td>
+                  <td>{numberWithCommas(financialPositionObj.totalCurrentLiabilities)}</td>
+                </tr>
+                <tr>
+                  <td><strong>Total Equity and Liabilities</strong></td>
+                  <td><strong>{numberWithCommas(financialPositionObj.totalEquityAndLiabilities)}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </Col>
+        </Row>
+      </Container>
+
+
 
 
     </div>
